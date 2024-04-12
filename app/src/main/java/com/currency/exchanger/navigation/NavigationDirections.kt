@@ -11,19 +11,6 @@ data class NavigationDirection(
 ) : NavigationCommand
 
 object ExchangeRatesDirections {
-
-    val exchangeratesList = NavigationDirection(destination = "exchangerateListScreen")
-
-    fun exchangerate(itemId: String = "{itemId}"): NavigationDirection {
-        return NavigationDirection(
-            destination = "exchangerate/$itemId",
-            arguments = listOf(
-                navArgument("itemId") {
-                    nullable = true
-                    defaultValue = null
-                    type = NavType.StringType
-                },
-            ),
-        )
-    }
+    val converter = NavigationDirection(destination = "converterScreen")
+    val balances = NavigationDirection(destination = "balancesScreen")
 }

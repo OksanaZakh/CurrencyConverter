@@ -1,4 +1,4 @@
-package com.currency.exchanger.ui.exchangerate
+package com.currency.exchanger.ui.balances
 
 import com.currency.exchanger.domain.repo.ExchangeRateRepository
 import com.currency.exchanger.navigation.NavigationManager

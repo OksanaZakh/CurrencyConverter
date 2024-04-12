@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.currency.exchanger.navigation.NavigationManager
-import com.currency.exchanger.ui.theme.ExchangeRateTheme
+import com.currency.exchanger.ui.theme.ConverterTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ExchangeRateTheme {
+            ConverterTheme {
                 MainActivityView(navigationManager)
             }
         }

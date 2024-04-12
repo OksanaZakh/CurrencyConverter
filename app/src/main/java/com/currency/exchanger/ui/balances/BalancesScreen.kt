@@ -1,4 +1,4 @@
-package com.currency.exchanger.ui.exchangerate
+package com.currency.exchanger.ui.balances
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun ExchangeRateScreen(
+fun BalancesScreen(
     viewModel: ExchangeRateViewModel = hiltViewModel(),
     item: String? = null,
 ) {

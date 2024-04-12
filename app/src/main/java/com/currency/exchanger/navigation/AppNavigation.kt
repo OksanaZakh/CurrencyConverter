@@ -3,12 +3,10 @@ package com.currency.exchanger.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.currency.exchanger.ui.exchangerate.ExchangeRateScreen
-import com.currency.exchanger.ui.list.ExchangeRateListScreen
+import com.currency.exchanger.ui.balances.BalancesScreen
+import com.currency.exchanger.ui.converter.ConverterScreen
 
 @Composable
 fun AppNavigation(
@@ -18,15 +16,9 @@ fun AppNavigation(
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = ExchangeRatesDirections.exchangeratesList.destination,
+        startDestination = ExchangeRatesDirections.converter.destination,
     ) {
-        composable(ExchangeRatesDirections.exchangeratesList.destination) { ExchangeRateListScreen() }
-        composable(
-            route = ExchangeRatesDirections.exchangerate().destination,
-            arguments = ExchangeRatesDirections.exchangerate().arguments,
-        ) { entry ->
-            val item = entry.arguments?.getString("itemId")?.takeIf { it != "{itemId}" }
-            ExchangeRateScreen(item = item)
-        }
+        composable(ExchangeRatesDirections.converter.destination) { ConverterScreen() }
+        composable(ExchangeRatesDirections.balances.destination) { BalancesScreen() }
     }
 }

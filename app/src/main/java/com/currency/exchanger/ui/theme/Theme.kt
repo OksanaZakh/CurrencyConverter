@@ -7,24 +7,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 
 @Composable
-fun ExchangeRateTheme(
+fun ConverterTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
         colorScheme = colors,
-        shapes = ExchangeRateShapes,
+        shapes = ConverterShapes,
         typography = Typography(),
         content = content
     )
 }
 
-object ExchangeRateTheme {
+object ConverterTheme {
     val colors: ColorScheme
         @Composable
         @ReadOnlyComposable
         get() = LocalColors.current
 
-    val typography: ExchangeRateTypography
+    val typography: ConverterTypography
         @Composable
         @ReadOnlyComposable
         get() = LocalTypography.current

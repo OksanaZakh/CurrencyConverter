@@ -3,6 +3,7 @@ package com.currency.exchanger.di
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import com.currency.exchanger.data.ConverterDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +35,10 @@ object AppModule {
     fun providesExchangeRateRepository(networkExchangeRateDataSource: NetworkExchangeRateDataSource): ExchangeRateRepository {
         return ExchangeRateRepositoryImpl(networkExchangeRateDataSource)
     }
+
+    @Singleton
+    @Provides
+    fun providesDataStoreManager(context: Context) = ConverterDataStore(context)
 
     @Provides
     fun provideHttpClient(): HttpClient {

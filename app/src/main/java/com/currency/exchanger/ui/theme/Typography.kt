@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
-data class ExchangeRateTypography(
+data class ConverterTypography(
     val title: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontSize = 64.sp,
@@ -20,8 +20,15 @@ data class ExchangeRateTypography(
         fontSize = 18.sp,
         lineHeight = 24.sp,
     ),
+
+    val body: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.sp,
+        lineHeight = 24.sp,
+    ),
 )
 
 val LocalTypography = staticCompositionLocalOf {
-    ExchangeRateTypography()
+    ConverterTypography()
 }
