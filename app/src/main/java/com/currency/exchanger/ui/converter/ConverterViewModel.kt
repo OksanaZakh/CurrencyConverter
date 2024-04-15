@@ -1,8 +1,6 @@
 package com.currency.exchanger.ui.converter
 
 import androidx.lifecycle.viewModelScope
-import com.currency.exchanger.navigation.ExchangeRatesDirections
-import com.currency.exchanger.navigation.NavigationManager
 import com.currency.exchanger.ui.BaseViewModel
 import com.currency.exchanger.di.coroutines.IoDispatcher
 import com.currency.exchanger.domain.model.ExchangeRateResponse
@@ -25,7 +23,6 @@ class ConverterViewModel @Inject constructor(
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
     private val getNumAttemptsUseCase: GetNumAttemptsUseCase,
     private val setNumAttemptsUseCase: SetNumAttemptsUseCase,
-    private val navigationManager: NavigationManager,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : BaseViewModel<ConverterState, ConverterEvent>(ConverterState.Loading) {
 
@@ -52,7 +49,6 @@ class ConverterViewModel @Inject constructor(
     override fun onEvent(event: ConverterEvent) {
         when (event) {
             is ConverterEvent.GetExchangeRates -> getExchangeRates()
-            is ConverterEvent.GetDetailedBalances -> getDetailedBalances()
             is ConverterEvent.Calculate -> calculate(event.receiveCurrency, event.sellAmount)
             is ConverterEvent.ShowInfoPopup -> {}
             is ConverterEvent.SubmitConversion -> {}
@@ -106,9 +102,6 @@ class ConverterViewModel @Inject constructor(
         }
     }
 
-    private fun getDetailedBalances() {
-        navigationManager.navigate(ExchangeRatesDirections.balances)
-    }
 
     companion object {
         const val INITIAL_CURRENCY = "EUR"

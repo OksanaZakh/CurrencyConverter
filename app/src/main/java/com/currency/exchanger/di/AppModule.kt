@@ -11,7 +11,6 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import com.currency.exchanger.data.net.NetworkExchangeRateDataSource
 import com.currency.exchanger.data.ExchangeRateRepositoryImpl
-import com.currency.exchanger.navigation.NavigationManager
 import com.currency.exchanger.domain.repo.ExchangeRateRepository
 
 import io.ktor.client.HttpClient
@@ -26,10 +25,6 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
-    @Singleton
-    @Provides
-    fun providesNavigationManager() = NavigationManager()
 
     @Provides
     fun providesExchangeRateRepository(networkExchangeRateDataSource: NetworkExchangeRateDataSource): ExchangeRateRepository {
