@@ -35,6 +35,12 @@ class ConverterViewModel @Inject constructor(
     private val _rates: MutableStateFlow<Map<String, Double>> = MutableStateFlow(emptyMap())
     val rates = _rates.asStateFlow()
 
+    private val _receive: MutableStateFlow<Pair<String, Double>> = MutableStateFlow("USD" to 0.0)
+    val receive = _receive.asStateFlow()
+
+    private val _sell: MutableStateFlow<Pair<String, Double>> = MutableStateFlow("EUR" to 0.0)
+    val sell = _sell.asStateFlow()
+
     init {
         getCurrentBalance()
         getExchangeRates()
@@ -44,11 +50,13 @@ class ConverterViewModel @Inject constructor(
         when (event) {
             is ConverterEvent.GetExchangeRates -> getExchangeRates()
             is ConverterEvent.GetDetailedBalances -> getDetailedBalances()
-            is ConverterEvent.DismissError -> {}
+            is ConverterEvent.Calculate -> {}
             is ConverterEvent.ShowInfoPopup -> {}
             is ConverterEvent.SubmitConversion -> {}
         }
     }
+
+
 
     private fun getCurrentBalance() {
         viewModelScope.launch(dispatcher) {

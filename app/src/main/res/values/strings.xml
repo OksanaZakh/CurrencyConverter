@@ -4,4 +4,6 @@
     <string name="currency_converter">Currency Converter</string>
     <string name="my_balances">My Balances</string>
     <string name="currency_exchange">Currency Exchange</string>
+    <string name="sell">Sell</string>
+    <string name="receive">Receive</string>
 </resources>
