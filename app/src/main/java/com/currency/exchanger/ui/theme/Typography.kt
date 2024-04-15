@@ -24,7 +24,7 @@ data class ConverterTypography(
     val body: TextStyle = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
+        fontSize = 18.sp,
         lineHeight = 24.sp,
     ),
 )

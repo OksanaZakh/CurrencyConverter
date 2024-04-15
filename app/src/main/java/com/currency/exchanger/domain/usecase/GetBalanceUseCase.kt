@@ -5,8 +5,8 @@ import javax.inject.Inject
 
 class GetBalanceUseCase @Inject constructor(
     private val dataStore: ConverterDataStore
-) : BaseUseCase<Unit, Map<String, Double>> {
-    override suspend fun execute(params: Unit): Map<String, Double> {
+) : BaseUseCase<Unit, List<Pair<String, Double>>> {
+    override suspend fun execute(params: Unit): List<Pair<String, Double>> {
         return dataStore.getBalance()
     }
 }

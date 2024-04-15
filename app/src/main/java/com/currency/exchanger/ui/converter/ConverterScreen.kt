@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,8 +83,8 @@ fun ConverterScreen(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun ConverterScreenContent(
-    balance: Map<String, Double> = emptyMap(),
-    rates: Map<String, Double> = emptyMap(),
+    balance: List<Pair<String, Double>> = emptyList(),
+    rates: List<Pair<String, Double>> = emptyList(),
     sell: Pair<String, Double> = "EUR" to 0.0,
     receive: Pair<String, Double> = "USD" to 0.0,
     popup: String? = null,
@@ -130,7 +132,7 @@ private fun ConverterScreenContent(
             )
             LazyRow {
                 items(balance.size) {
-                    val item = balance.toList()[it]
+                    val item = balance[it]
                     BalanceItem(
                         currency = item.first, rate = item.second
                     )
@@ -169,7 +171,7 @@ private fun ConverterScreenContent(
                 amount = receive.second,
                 isInputEnabled = false,
                 currency = receive.first,
-                currencyList = rates.keys.toList(),
+                currencyList = rates.map { it.first },
                 onValueChange = { currency, _ ->
                     onEvent(
                         ConverterEvent.Calculate(
@@ -265,12 +267,14 @@ fun NumberInputField(
 ) {
     val amount = remember { mutableDoubleStateOf(initialValue) }
     val isError = remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     val change: (String) -> Unit = { it ->
         val inputAmount = it.toDoubleOrNull()
+        amount.doubleValue = inputAmount ?: 0.0
         if (inputAmount != null && inputAmount >= 0.0 && inputAmount <= maxAmount) {
-            amount.doubleValue = inputAmount
             onValueChange(inputAmount)
+            isError.value = false
         } else {
             isError.value = true
         }
@@ -280,7 +284,15 @@ fun NumberInputField(
         modifier = Modifier.width(96.dp),
         textStyle = ConverterTheme.typography.body,
         value = amount.doubleValue.toString(),
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Done,
+            keyboardType = KeyboardType.Decimal,
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                focusManager.clearFocus()
+            },
+        ),
         colors = TextFieldDefaults.colors(
             errorTextColor = ConverterTheme.colors.error,
             errorContainerColor = ConverterTheme.colors.tertiary,

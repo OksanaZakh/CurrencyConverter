@@ -30,28 +30,30 @@ class ConverterDataStore @Inject constructor(
         }
     }
 
-    suspend fun getBalance(): Map<String, Double> {
-        return context.dataStore.data.firstOrNull()?.get(PreferencesKeys.balanceKey)?.toBalanceMap()
-            ?: emptyMap()
+    suspend fun getBalance(): List<Pair<String, Double>> {
+        return context.dataStore.data.firstOrNull()?.get(PreferencesKeys.balanceKey)
+            ?.toBalancePairList()
+            ?: emptyList()
     }
 
-    suspend fun setBalance(value: Map<String, Double>) {
+    suspend fun setBalance(value: List<Pair<String, Double>>) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.balanceKey] = value.toString()
         }
     }
 
-    private fun String.toBalanceMap(): Map<String, Double> {
-        val strMap = this.replace("{", "")
-            .replace("}", "")
-            .replace(" ", "")
+    private fun String.toBalancePairList(): List<Pair<String, Double>> {
         return try {
-            strMap.split(",").associate {
-                val (currency, balance) = it.split("=")
-                currency to balance.toDouble()
-            }
+            this.replace("[(", "")
+                .replace(")]", "").replace(" ", "")
+                .split("),(").map { text ->
+                    Pair(
+                        text.substringBefore(",").trim(),
+                        text.substringAfter(",").trim().toDouble()
+                    )
+                }
         } catch (e: Exception) {
-            return emptyMap()
+            return emptyList()
         }
     }
 

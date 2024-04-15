@@ -29,16 +29,19 @@ class ConverterViewModel @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : BaseViewModel<ConverterState, ConverterEvent>(ConverterState.Loading) {
 
-    private val _balance: MutableStateFlow<Map<String, Double>> = MutableStateFlow(emptyMap())
+    private val _balance: MutableStateFlow<List<Pair<String, Double>>> =
+        MutableStateFlow(emptyList())
     val balance = _balance.asStateFlow()
 
-    private val _rates: MutableStateFlow<Map<String, Double>> = MutableStateFlow(emptyMap())
+    private val _rates: MutableStateFlow<List<Pair<String, Double>>> = MutableStateFlow(emptyList())
     val rates = _rates.asStateFlow()
 
-    private val _receive: MutableStateFlow<Pair<String, Double>> = MutableStateFlow("USD" to 0.0)
+    private val _receive: MutableStateFlow<Pair<String, Double>> =
+        MutableStateFlow(INITIAL_RECEIVE_CURRENCY to 0.0)
     val receive = _receive.asStateFlow()
 
-    private val _sell: MutableStateFlow<Pair<String, Double>> = MutableStateFlow("EUR" to 0.0)
+    private val _sell: MutableStateFlow<Pair<String, Double>> =
+        MutableStateFlow(INITIAL_CURRENCY to 0.0)
     val sell = _sell.asStateFlow()
 
     init {
@@ -50,19 +53,35 @@ class ConverterViewModel @Inject constructor(
         when (event) {
             is ConverterEvent.GetExchangeRates -> getExchangeRates()
             is ConverterEvent.GetDetailedBalances -> getDetailedBalances()
-            is ConverterEvent.Calculate -> {}
+            is ConverterEvent.Calculate -> calculate(event.receiveCurrency, event.sellAmount)
             is ConverterEvent.ShowInfoPopup -> {}
             is ConverterEvent.SubmitConversion -> {}
         }
     }
 
+    private fun submitConversion() {
 
+    }
+
+    private fun calculate(currency: String, amount: Double) {
+        val balance = balance.value.firstOrNull { it.first == INITIAL_CURRENCY }?.second
+        if (balance != null && balance >= amount) {
+            val rate = rates.value.firstOrNull { it.first == currency }?.second
+            val newAmount = rate?.let {
+                (it * amount).round(2)
+            } ?: 0.0
+            _sell.value = INITIAL_CURRENCY to amount
+            _receive.value = currency to newAmount
+        }
+    }
+
+    private fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
 
     private fun getCurrentBalance() {
         viewModelScope.launch(dispatcher) {
             val map = getBalanceUseCase.execute(Unit)
             if (map.isEmpty()) {
-                val initialBalance = mapOf(INITIAL_CURRENCY to INITIAL_AMOUNT)
+                val initialBalance = listOf(INITIAL_CURRENCY to INITIAL_AMOUNT)
                 updateBalanceUseCase.execute(initialBalance)
                 _balance.value = initialBalance
             } else {
@@ -77,13 +96,12 @@ class ConverterViewModel @Inject constructor(
             when (response) {
                 is ExchangeRateResponse.Success -> {
                     _state.value = ConverterState.Default
-                    _rates.value = response.data.rates
+                    _rates.value = response.data.rates.map { it.toPair() }
                 }
 
-                is ExchangeRateResponse.Error -> _state.value =
-                    ConverterState.InfoPopup(
-                        response.message ?: ERROR_MESSAGE
-                    )
+                is ExchangeRateResponse.Error -> _state.value = ConverterState.InfoPopup(
+                    response.message ?: ERROR_MESSAGE
+                )
             }
         }
     }
@@ -94,6 +112,7 @@ class ConverterViewModel @Inject constructor(
 
     companion object {
         const val INITIAL_CURRENCY = "EUR"
+        const val INITIAL_RECEIVE_CURRENCY = "USD"
         const val INITIAL_AMOUNT = 1000.0
         const val ERROR_MESSAGE = "Something goes wrong:( Please try again later."
     }
