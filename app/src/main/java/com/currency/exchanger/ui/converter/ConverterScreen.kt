@@ -162,12 +162,13 @@ private fun ConverterScreenContent(
                 maxSellAmount = balance.firstOrNull { it.first == sell.first }?.second ?: 0.0,
                 isInputEnabled = true,
                 focusManager = focusManager,
-                currencyList = listOf(sell.first),
-                onValueChange = { _, value ->
+                currencyList = balance.filter { it.second != 0.0 }.map { it.first },
+                onValueChange = { currency, value ->
                     isErrorAmount = false
                     onEvent(
                         ConverterEvent.Calculate(
                             receive.first,
+                            currency,
                             value
                         )
                     )
@@ -189,6 +190,7 @@ private fun ConverterScreenContent(
                     onEvent(
                         ConverterEvent.Calculate(
                             currency,
+                            sell.first,
                             sell.second
                         )
                     )

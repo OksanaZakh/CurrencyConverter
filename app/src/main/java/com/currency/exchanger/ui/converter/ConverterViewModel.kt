@@ -49,7 +49,12 @@ class ConverterViewModel @Inject constructor(
     override fun onEvent(event: ConverterEvent) {
         when (event) {
             is ConverterEvent.GetExchangeRates -> getExchangeRates()
-            is ConverterEvent.Calculate -> calculate(event.receiveCurrency, event.sellAmount)
+            is ConverterEvent.Calculate -> calculate(
+                event.receiveCurrency,
+                event.sellCurrency,
+                event.sellAmount
+            )
+
             is ConverterEvent.ShowInfoPopup -> showInfoPopUp()
             is ConverterEvent.SubmitConversion -> submitConversion()
             is ConverterEvent.DismissPopup -> dismissPopup()
@@ -126,15 +131,19 @@ class ConverterViewModel @Inject constructor(
         return commission.round(2)
     }
 
-    private fun calculate(currency: String, amount: Double) {
-        val balance = balance.value.firstOrNull { it.first == INITIAL_CURRENCY }?.second
+    private fun calculate(receiveCurrency: String, sellCurrency: String, amount: Double) {
+        val balance = balance.value.firstOrNull { it.first == sellCurrency }?.second
         if (balance != null && balance >= amount) {
-            val rate = rates.value.firstOrNull { it.first == currency }?.second
-            val newAmount = rate?.let {
-                (it * amount).round(2)
-            } ?: 0.0
-            _sell.value = INITIAL_CURRENCY to amount
-            _receive.value = currency to newAmount
+            val rate = rates.value.firstOrNull { it.first == receiveCurrency }?.second ?: 0.0
+            val newAmount = if (sellCurrency == INITIAL_CURRENCY) {
+                (rate * amount).round(2)
+            } else {
+                val sellRate = rates.value.firstOrNull { it.first == sellCurrency }?.second ?: 1.0
+                val crossRate = rate / sellRate
+                (crossRate * amount).round(2)
+            }
+            _sell.value = sellCurrency to amount
+            _receive.value = receiveCurrency to newAmount
         }
     }
 
@@ -163,7 +172,7 @@ class ConverterViewModel @Inject constructor(
                     is ExchangeRateResponse.Success -> {
                         _state.value = ConverterState.Default
                         _rates.value = response.data.rates.map { it.toPair() }
-                        calculate(_receive.value.first, _sell.value.second)
+                        calculate(_receive.value.first, sell.value.first, _sell.value.second)
                     }
 
                     is ExchangeRateResponse.Error -> _state.value = ConverterState.Error(
