@@ -6,4 +6,8 @@
     <string name="currency_exchange">Currency Exchange</string>
     <string name="sell">Sell</string>
     <string name="receive">Receive</string>
+    <string name="currency_converted">Currency Converted</string>
+    <string name="ok">Ok</string>
+    <string name="done">Done</string>
+    <string name="error">"Error"</string>
 </resources>

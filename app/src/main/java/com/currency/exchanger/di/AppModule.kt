@@ -12,7 +12,6 @@ import javax.inject.Singleton
 import com.currency.exchanger.data.net.NetworkExchangeRateDataSource
 import com.currency.exchanger.data.ExchangeRateRepositoryImpl
 import com.currency.exchanger.domain.repo.ExchangeRateRepository
-
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -25,7 +24,6 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     fun providesExchangeRateRepository(networkExchangeRateDataSource: NetworkExchangeRateDataSource): ExchangeRateRepository {
         return ExchangeRateRepositoryImpl(networkExchangeRateDataSource)
@@ -51,7 +49,7 @@ object AppModule {
                 level = LogLevel.ALL
             }
             defaultRequest {
-                url("https://developers.paysera.com/tasks/api/currency-exchange-rates")
+                url(URL)
             }
         }
     }
@@ -63,4 +61,6 @@ object AppModule {
     fun provideApplicationContext(application: Application): Context {
         return application
     }
+
+    const val URL = "https://developers.paysera.com/tasks/api/currency-exchange-rates"
 }
