@@ -4,10 +4,9 @@ import androidx.lifecycle.viewModelScope
 import com.currency.exchanger.ui.BaseViewModel
 import com.currency.exchanger.di.coroutines.IoDispatcher
 import com.currency.exchanger.domain.model.ExchangeRateResponse
+import com.currency.exchanger.domain.usecase.CalculateCommissionUseCase
 import com.currency.exchanger.domain.usecase.GetBalanceUseCase
 import com.currency.exchanger.domain.usecase.GetExchangeRateUseCase
-import com.currency.exchanger.domain.usecase.GetNumAttemptsUseCase
-import com.currency.exchanger.domain.usecase.SetNumAttemptsUseCase
 import com.currency.exchanger.domain.usecase.UpdateBalanceUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,8 +20,7 @@ class ConverterViewModel @Inject constructor(
     private val getBalanceUseCase: GetBalanceUseCase,
     private val updateBalanceUseCase: UpdateBalanceUseCase,
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
-    private val getNumAttemptsUseCase: GetNumAttemptsUseCase,
-    private val setNumAttemptsUseCase: SetNumAttemptsUseCase,
+    private val calculateCommissionUseCase: CalculateCommissionUseCase,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : BaseViewModel<ConverterState, ConverterEvent>(ConverterState.Default) {
 
@@ -49,15 +47,14 @@ class ConverterViewModel @Inject constructor(
     override fun onEvent(event: ConverterEvent) {
         when (event) {
             is ConverterEvent.GetExchangeRates -> getExchangeRates()
+            is ConverterEvent.ShowInfoPopup -> showInfoPopUp()
+            is ConverterEvent.SubmitConversion -> submitConversion()
+            is ConverterEvent.DismissPopup -> dismissPopup()
             is ConverterEvent.Calculate -> calculate(
                 event.receiveCurrency,
                 event.sellCurrency,
                 event.sellAmount
             )
-
-            is ConverterEvent.ShowInfoPopup -> showInfoPopUp()
-            is ConverterEvent.SubmitConversion -> submitConversion()
-            is ConverterEvent.DismissPopup -> dismissPopup()
         }
     }
 
@@ -68,9 +65,8 @@ class ConverterViewModel @Inject constructor(
     private fun submitConversion() {
         _state.value = ConverterState.Default
         viewModelScope.launch(dispatcher) {
-            val commission = calculateCommission(submit = true)
-            val balance: Double =
-                _balance.value.firstOrNull { it.first == _sell.value.first }?.second ?: 0.0
+            val commission = calculateCommissionUseCase.execute(_sell.value.second to true)
+            val balance = currentBalanceOfSellCurr()
             if (commission >= 0 && ((commission + _sell.value.second) <= balance)) {
                 _state.value = ConverterState.Loading
                 updateBalance(commission)
@@ -108,28 +104,27 @@ class ConverterViewModel @Inject constructor(
 
     private fun showInfoPopUp() {
         viewModelScope.launch(dispatcher) {
-            val commission = calculateCommission(false)
-            val balance: Double =
-                _balance.value.firstOrNull { it.first == _sell.value.first }?.second ?: 0.0
-            if (commission >= 0 && ((commission + _sell.value.second) <= balance)) {
+            val commission = calculateCommissionUseCase.execute(_sell.value.second to false)
+            val balance = currentBalanceOfSellCurr()
+            if (commission >= 0.0 && ((commission + _sell.value.second) <= balance)) {
                 _state.value = ConverterState.InfoPopup(
-                    "You have converted ${_sell.value.second} ${_sell.value.first} " + "to ${_receive.value.second} ${_receive.value.first}." +
-                            " Commission Fee: $commission ${_sell.value.first}  "
+                    YOU_HAVE_CONVERTED + " ${_sell.value.second} ${_sell.value.first} "
+                            + TO + " ${_receive.value.second} ${_receive.value.first}." +
+                            " " + COMMISSION_FEE + " $commission ${_sell.value.first}  "
                 )
             } else {
                 _state.value = ConverterState.InfoPopup(
-                    "You have not enough money on your ${_sell.value.first} account. Please insert another amount."
+                    String.format(
+                        ERROR_NOT_ENOUGH_MONEY,
+                        _sell.value.first,
+                    )
                 )
             }
         }
     }
 
-    private suspend fun calculateCommission(submit: Boolean): Double {
-        val attempt = getNumAttemptsUseCase.execute(Unit)
-        val commission = if (attempt < 5) 0.0 else _sell.value.second * COMMISSION_RATE
-        if (submit) setNumAttemptsUseCase.execute(attempt + 1)
-        return commission.round(2)
-    }
+    private fun currentBalanceOfSellCurr() =
+        _balance.value.firstOrNull { it.first == _sell.value.first }?.second ?: 0.0
 
     private fun calculate(receiveCurrency: String, sellCurrency: String, amount: Double) {
         val balance = balance.value.firstOrNull { it.first == sellCurrency }?.second
@@ -147,26 +142,16 @@ class ConverterViewModel @Inject constructor(
         }
     }
 
-    private fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
 
     private fun getCurrentBalance() {
         viewModelScope.launch(dispatcher) {
-            val map = getBalanceUseCase.execute(Unit)
-            if (map.isEmpty()) {
-                val initialBalance = listOf(INITIAL_CURRENCY to INITIAL_AMOUNT)
-                updateBalanceUseCase.execute(initialBalance)
-                _balance.value = initialBalance
-            } else {
-                _balance.value = map
-            }
+            _balance.value = getBalanceUseCase.execute(Unit)
         }
     }
 
     private fun getExchangeRates() {
         if (_state.value is ConverterState.Default || _state.value is ConverterState.Error) {
-            viewModelScope.launch(
-                dispatcher
-            ) {
+            viewModelScope.launch(dispatcher) {
                 val response = getExchangeRateUseCase.execute(Unit)
                 when (response) {
                     is ExchangeRateResponse.Success -> {
@@ -183,11 +168,16 @@ class ConverterViewModel @Inject constructor(
         }
     }
 
+    private fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
+
     companion object {
         const val INITIAL_CURRENCY = "EUR"
-        const val COMMISSION_RATE = 0.007
         const val INITIAL_RECEIVE_CURRENCY = "USD"
-        const val INITIAL_AMOUNT = 1000.0
         const val ERROR_MESSAGE = "Something goes wrong:( Please try again later."
+        const val ERROR_NOT_ENOUGH_MONEY =
+            "You have not enough money on your %s account. Please insert another amount."
+        const val YOU_HAVE_CONVERTED = "You have converted"
+        const val TO = "to"
+        const val COMMISSION_FEE = "Commission Fee:"
     }
 }
