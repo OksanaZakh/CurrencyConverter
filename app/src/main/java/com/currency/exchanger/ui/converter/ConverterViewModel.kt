@@ -126,6 +126,7 @@ class ConverterViewModel @Inject constructor(
     private fun currentBalanceOfSellCurr() =
         _balance.value.firstOrNull { it.first == _sell.value.first }?.second ?: 0.0
 
+    //TODO: Move to use case
     private fun calculate(receiveCurrency: String, sellCurrency: String, amount: Double) {
         val balance = balance.value.firstOrNull { it.first == sellCurrency }?.second
         if (balance != null && balance >= amount) {
